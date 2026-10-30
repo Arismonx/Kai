@@ -61,6 +61,29 @@ html,body{margin:0;height:100%;overflow:hidden;background:#8ed1fc;font-family:"S
 @keyframes wob{50%{transform:translate(-50%,-50%) rotate(12deg)}}
 .grain{position:absolute;font-size:18px;z-index:3;pointer-events:none;transform:translate(-50%,-50%)}
 
+/* growth stages: space themes */
+#cosmos{position:absolute;left:0;right:0;top:4%;font-size:34px;letter-spacing:14px;text-align:center;opacity:.9;display:none;pointer-events:none}
+#farm[data-sky] #cosmos{display:block}
+#farm[data-sky] .cloud{display:none}
+#farm[data-sky] #sky::before{content:'';position:absolute;inset:0 0 45% 0;background-image:radial-gradient(1.5px 1.5px at 20px 30px,#fff,transparent),radial-gradient(1px 1px at 70px 85px,#fff,transparent),radial-gradient(1.5px 1.5px at 130px 50px,#fff,transparent),radial-gradient(1px 1px at 100px 15px,#fff,transparent);background-size:160px 110px}
+#farm[data-sky=earth] #sky{background:linear-gradient(#0b2a6b 0%,#3b82d6 55%,#a8dd7a 55%,#7cc254 100%)}
+#farm[data-sky=solar] #sky{background:linear-gradient(#050a26 0%,#1b2a6b 55%,#a8dd7a 55%,#7cc254 100%)}
+#farm[data-sky=galaxy] #sky{background:linear-gradient(#1a0536 0%,#5b2a8a 55%,#a8dd7a 55%,#7cc254 100%)}
+#farm[data-sky=cosmos] #sky{background:linear-gradient(#000 0%,#2a0a4a 30%,#0a3a5a 55%,#a8dd7a 55%,#7cc254 100%)}
+.ck .acc{position:absolute;left:0;top:0;pointer-events:none;line-height:1;white-space:nowrap}
+
+/* gacha */
+.gg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:6px 0}
+.gc{border:2px solid var(--line);border-radius:12px;background:#fff;text-align:center;padding:4px 1px;font-size:10px;font-weight:700;animation:pop2 .35s ease-out backwards}
+.gc i{font-style:normal;font-size:26px;display:block}
+@keyframes pop2{from{transform:scale(0) rotate(-20deg)}}
+.cr{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px dashed var(--line);font-size:12px}
+.cr .ic{font-size:26px;width:34px;text-align:center}
+.cr .tx{flex:1;min-width:0}
+.fr .ab{font-size:11px;opacity:.75;margin-top:6px}
+.fr .lab{font-size:11px;font-weight:800;margin-top:6px;opacity:.7}
+.bonus{background:#fff3d6;border:2px dashed var(--line);border-radius:12px;padding:6px 10px;font-size:12px;font-weight:700;margin-bottom:8px}
+
 /* actions */
 #actions{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;padding:8px 6px;background:linear-gradient(#7cc254,#5fa83c)}
 .btn{background:var(--card);border:3px solid var(--line);border-bottom-width:6px;border-radius:16px;padding:6px 0;font-size:12px;min-width:0;font-weight:800;color:var(--ink);font-family:inherit;line-height:1.15}
@@ -129,6 +152,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#8ed1fc;font-family:"S
     <div id="sky"></div>
     <div id="barn">🏠</div>
     <div id="fence"></div>
+    <div id="cosmos"></div>
     <div id="bubble"></div>
     <div id="incub"></div>
     <div id="dog">🐕</div>
@@ -145,6 +169,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#8ed1fc;font-family:"S
 
   <div id="shop" class="ov"><div id="sheet" class="sheet"></div></div>
   <div id="flock" class="ov"><div id="fsheet" class="sheet"></div></div>
+  <div id="gacha" class="ov"><div id="gsheet" class="sheet"></div></div>
   <div id="modal" class="ov"><div id="msheet" class="sheet"></div></div>
   <div id="toast"></div>
 </div>
@@ -173,6 +198,7 @@ const defaults = () => ({
   nextId: 2,
   colors: ['gold'],
   incub: null,
+  gear: {}, pulls: 0, pity: 0,
   lastSeen: Date.now(),
   totalEggs: 0, totalPets: 0, enemiesBeaten: 0
 });
@@ -193,6 +219,23 @@ function save(){
 
 /* ---------- data ---------- */
 const TITLES = ['ลูกไก่จอมกลม','ไก่กลมตัวน้อย','ไก่กลมจอมกิน','ไก่ฟาร์มสุดฮอต','ไก่กลมระดับเทพ','ราชาไก่กลม','ไก่กลมจักรวาล'];
+/* growth stages by level. sz = share of the max on-screen size (kept under the farm-size cap) */
+const STAGES = [
+  {lv:1,  n:'ไก่จิ๋ว',               sz:.32},
+  {lv:3,  n:'ไก่เล็ก',               sz:.4},
+  {lv:6,  n:'ไก่ปกติ',               sz:.5},
+  {lv:10, n:'ไก่ยักษ์',              sz:.62},
+  {lv:15, n:'ไก่ใหญ่เท่าภูเขา',      sz:.72},
+  {lv:20, n:'ไก่ใหญ่เท่าโลก',        sz:.82, sky:'earth',  glow:'#7cf', ic:'🌍'},
+  {lv:30, n:'ไก่ใหญ่เท่าระบบสุริยะ', sz:.89, sky:'solar',  glow:'#fc6', ic:'☀️🪐🌍'},
+  {lv:40, n:'ไก่ใหญ่เท่ากาแล็กซี',   sz:.95, sky:'galaxy', glow:'#d9f', ic:'🌌'},
+  {lv:50, n:'ไก่ใหญ่เท่าจักรวาล',    sz:1,   sky:'cosmos', glow:'#fff', ic:'🌌✨🌠'},
+];
+const stageOf = lv => STAGES.reduce((r,s,i)=>lv>=s.lv?i:r,0);
+function levelFrac(lv){
+  const i=stageOf(lv), a=STAGES[i], b=STAGES[i+1];
+  return b ? a.sz + (b.sz-a.sz)*(lv-a.lv)/(b.lv-a.lv) : a.sz;
+}
 const xpNeed = lv => 40 + lv*35;
 const HATS = [
   {id:'none', ic:'🚫', name:'ไม่ใส่หมวก', price:0},
@@ -203,6 +246,45 @@ const HATS = [
   {id:'🌸', ic:'🌸', name:'ดอกไม้', price:30},
   {id:'🎓', ic:'🎓', name:'หมวกบัณฑิต', price:120},
 ];
+/* gacha costumes: worn per chicken, every worn piece adds its bonus (duplicates level it up to Lv.3: +50% each) */
+const SLOTS = {hat:'หมวก', face:'หน้า', neck:'คอ', back:'หลัง'};
+const RARITY = {c:{n:'ธรรมดา',col:'#8a8a8a'}, r:{n:'หายาก',col:'#3b82f6'}, e:{n:'หายากมาก',col:'#a855f7'}, l:{n:'ตำนาน',col:'#f59e0b'}};
+const STAT = {egg:'ไข่ออกเร็ว', coin:'เหรียญจากขายไข่/ศัตรู', xp:'XP', gold:'โอกาสไข่ทอง', hunger:'หิวช้าลง', happy:'สุขลดช้าลง', clean:'สกปรกช้าลง', guard:'โอกาสแตะไล่ศัตรูแรง x2'};
+const STAT_CAP = {egg:1, coin:1, xp:1, gold:.2, hunger:.5, happy:.5, clean:.5, guard:.6};
+const PULL1 = 100, PULL10 = 900, PITY = 30;
+const GEAR = [
+  {id:'🪖',slot:'hat', n:'หมวกเหล็ก',      r:'c', fx:{guard:.05}},
+  {id:'👒',slot:'hat', n:'หมวกฟาง',        r:'c', fx:{xp:.04}},
+  {id:'⛑️',slot:'hat', n:'หมวกนิรภัย',     r:'c', fx:{clean:.05}},
+  {id:'🤠',slot:'hat', n:'หมวกคาวบอย',     r:'r', fx:{coin:.07}},
+  {id:'🎅',slot:'hat', n:'หมวกซานต้า',     r:'r', fx:{egg:.07}},
+  {id:'🦄',slot:'hat', n:'หมวกยูนิคอร์น',  r:'e', fx:{egg:.08,gold:.02}},
+  {id:'🌟',slot:'hat', n:'มงกุฎดาว',       r:'l', fx:{egg:.15,xp:.1}},
+  {id:'👓',slot:'face',n:'แว่นตา',         r:'c', fx:{xp:.04}},
+  {id:'🕶️',slot:'face',n:'แว่นดำ',         r:'c', fx:{coin:.04}},
+  {id:'🥽',slot:'face',n:'แว่นดำน้ำ',      r:'c', fx:{clean:.05}},
+  {id:'🎭',slot:'face',n:'หน้ากากละคร',    r:'r', fx:{gold:.015,egg:.04}},
+  {id:'🔍',slot:'face',n:'แว่นขยาย',       r:'r', fx:{xp:.07}},
+  {id:'🧿',slot:'face',n:'ตาทิพย์',        r:'e', fx:{gold:.04,coin:.08}},
+  {id:'🔮',slot:'face',n:'ลูกแก้ววิเศษ',   r:'l', fx:{gold:.08,coin:.12}},
+  {id:'🧣',slot:'neck',n:'ผ้าพันคอ',       r:'c', fx:{happy:.04}},
+  {id:'🔔',slot:'neck',n:'กระดิ่ง',        r:'c', fx:{guard:.05}},
+  {id:'📿',slot:'neck',n:'สร้อยลูกปัด',    r:'r', fx:{coin:.07}},
+  {id:'🏅',slot:'neck',n:'เหรียญรางวัล',   r:'r', fx:{xp:.07}},
+  {id:'💎',slot:'neck',n:'เพชร',           r:'e', fx:{gold:.04,egg:.06}},
+  {id:'🏆',slot:'neck',n:'ถ้วยทอง',        r:'l', fx:{egg:.12,coin:.12}},
+  {id:'🎒',slot:'back',n:'กระเป๋าเป้',     r:'c', fx:{hunger:.05}},
+  {id:'🧸',slot:'back',n:'ตุ๊กตาหมี',      r:'c', fx:{happy:.04}},
+  {id:'🦋',slot:'back',n:'ปีกผีเสื้อ',     r:'r', fx:{happy:.07}},
+  {id:'🛡️',slot:'back',n:'โล่',            r:'r', fx:{guard:.1}},
+  {id:'🚀',slot:'back',n:'จรวด',           r:'e', fx:{egg:.1}},
+  {id:'🌈',slot:'back',n:'สายรุ้ง',        r:'e', fx:{happy:.08,hunger:.06}},
+  {id:'🔥',slot:'back',n:'ออร่าไฟ',        r:'l', fx:{egg:.1,xp:.1,guard:.15}},
+];
+const GMAP = Object.fromEntries(GEAR.map(g=>[g.id,g]));
+const gearLv = id => Math.min(3, S.gear[id]||0);
+const gearMul = id => 1 + .5*(gearLv(id)-1);
+const gearDesc = g => Object.entries(g.fx).map(([k,v])=>`${STAT[k]} +${Math.round(v*gearMul(g.id)*100)}%`).join(' · ');
 const UPS = {
   feeder:{ic:'🤖',name:'เครื่องให้อาหารอัตโนมัติ',desc:l=>`ให้อาหารเองทุก ${Math.max(20,90-(l+1)*15)} วิ (ใช้เมล็ด)`,max:4,cost:l=>80*(l+1)**2},
   coop:  {ic:'🪹',name:'รังไข่สุดนุ่ม',desc:l=>`ไข่ออกเร็วขึ้น ${l*15}% → ${(l+1)*15}%`,max:5,cost:l=>60*(l+1)**2},
@@ -311,11 +393,12 @@ const chickens = [];
 function ageProg(d){ return d.born ? clamp((Date.now()-d.born)/1000/GROW_SEC,0,1) : 1; }
 function isAdult(d){ return ageProg(d)>=1; }
 function build(d){
+  ['face','neck','back'].forEach(k=>{ if(d[k]===undefined) d[k]='none'; });
   if(d.hat===undefined) d.hat = d.id===1 ? (S.hat||'none') : 'none'; // migrate old global hat to the main chicken
   const el=document.createElement('div'); el.className='ck';
-  el.innerHTML='<div class="sh"></div><img alt="ไก่" draggable="false"><div class="hat"></div><div class="tag"></div>';
+  el.innerHTML='<div class="sh"></div><div class="acc back"></div><img alt="ไก่" draggable="false"><div class="hat"></div><div class="acc face"></div><div class="acc neck"></div><div class="tag"></div>';
   farm.appendChild(el);
-  const c={data:d, el, img:el.querySelector('img'), hat:el.querySelector('.hat'), tag:el.querySelector('.tag'), sh:el.querySelector('.sh'),
+  const c={data:d, el, img:el.querySelector('img'), hat:el.querySelector('.hat'), acc:{face:el.querySelector('.acc.face'), neck:el.querySelector('.acc.neck'), back:el.querySelector('.acc.back')}, tag:el.querySelector('.tag'), sh:el.querySelector('.sh'),
            x:rnd(-120,120), y:rnd(-5,15), tx:0, ty:0, by:0, w:170, look:null, dragging:false};
   c.tx=c.x; c.ty=c.y; c.by=c.y;
   c.img.addEventListener('pointerdown', e=>{ e.preventDefault(); startDrag(c,e); });
@@ -360,29 +443,36 @@ function refreshLook(c){
   applyFilter(c);
 }
 function applyFilter(c){
-  const base='drop-shadow(0 12px 6px rgba(0,0,0,.22))';
+  const gl=STAGES[stageOf(S.level)].glow;
+  const base='drop-shadow(0 12px 6px rgba(0,0,0,.22))'+(gl?` drop-shadow(0 0 14px ${gl})`:'');
   const sad=(S.hunger<20||S.happy<20)?' saturate(.55) brightness(.92)':'';
   c.img.style.filter = (c.img.dataset.css? c.img.dataset.css+' ':'') + base + sad;
 }
-function levelScale(){ return (1 + Math.min(.55,(S.level-1)*.04)) * (1 - .07*(chickens.length-1)); }
+const gearKey = d => [d.hat,d.face,d.neck,d.back].join();
 function updateSize(c){
   const p=ageProg(c.data), main = c.data.id===1;
   const f = main ? 1 : (.5 + .3*p);
   if(!farm.clientHeight || !farm.clientWidth) return; // layout not ready: keep old size instead of collapsing to 0
-  const w = Math.round(Math.min(170*levelScale()*f, farm.clientHeight*.4, farm.clientWidth*.5));
-  if(w===c.w && c.sized===c.data.hat+c.data.name+isAdult(c.data)){ applyFilter(c); return; }
-  c.sized=c.data.hat+c.data.name+isAdult(c.data); c.w=w; clampPos(c);
+  const cap = Math.min(farm.clientHeight*.4, farm.clientWidth*.5);
+  const w = Math.round(Math.min(cap*levelFrac(S.level)*(1-.07*(chickens.length-1))*f, cap));
+  if(w===c.w && c.sized===gearKey(c.data)+c.data.name+isAdult(c.data)){ applyFilter(c); return; }
+  c.sized=gearKey(c.data)+c.data.name+isAdult(c.data); c.w=w; clampPos(c);
   c.img.style.width=c.w+'px'; c.sh.style.width=(c.w*.82)+'px';
   c.sh.style.transform=`translate(-50%,${c.w*.58}px)`;
   c.hat.style.fontSize=(c.w*.235)+'px';
   setHat(c);
-  c.hat.textContent = c.data.hat==='none'?'':c.data.hat;
+  ['hat','face','neck','back'].forEach(k=>{ const el=k==='hat'?c.hat:c.acc[k]; el.textContent = c.data[k]==='none'?'':c.data[k]; });
   c.tag.style.top=(c.w*.38+8)+'px';
   c.tag.textContent=c.data.name; c.tag.classList.toggle('chickTag', !isAdult(c.data));
   applyFilter(c);
 }
 /* the artwork faces left; flip it (and the hat) when the chicken walks right */
-function setHat(c){ const s=c.flip?-1:1; c.hat.style.transform=`translate(${-c.w*.62*s}px,${-c.w*.72}px) rotate(${-14*s}deg)`; }
+function setHat(c){
+  const s=c.flip?-1:1, w=c.w;
+  c.hat.style.transform=`translate(${-w*.62*s}px,${-w*.72}px) rotate(${-14*s}deg)`;
+  const put=(el,x,y,fs)=>{ el.style.fontSize=fs*w+'px'; el.style.transform=`translate(calc(-50% + ${x*s*w}px),calc(-50% + ${y*w}px))`; };
+  put(c.acc.face,-.34,-.26,.2); put(c.acc.neck,-.3,-.1,.2); put(c.acc.back,.42,-.28,.3);
+}
 function face(c,right){
   if(!!c.flip===right) return;
   c.flip=right; c.img.style.scale = right?'-1 1':'1 1'; setHat(c);
@@ -392,6 +482,12 @@ function center(c){
   return {x:r.left-f.left+r.width/2, y:r.top-f.top+r.height/2, w:r.width, h:r.height};
 }
 function anim(c,cls){ c.img.classList.remove('bounce','eat'); void c.img.offsetWidth; c.img.classList.add(cls); }
+function bonus(k){
+  let t=0;
+  chickens.forEach(c=>['hat','face','neck','back'].forEach(sl=>{ const g=GMAP[c.data[sl]]; if(g && g.fx[k] && S.gear[g.id]) t+=g.fx[k]*gearMul(g.id); }));
+  return Math.min(STAT_CAP[k], t);
+}
+const sellValue = () => Math.round((S.eggs*5+S.goldEggs*60)*(1+bonus('coin')));
 function adults(){ return chickens.filter(c=>isAdult(c.data)); }
 
 /* ---------- rendering ---------- */
@@ -399,11 +495,14 @@ function render(){
   $('coins').textContent = Math.floor(S.coins);
   $('flockCnt').textContent = `${chickens.length}/${MAX_FLOCK} ตัว`;
   $('eggs').textContent = S.eggs + (S.goldEggs? ' +'+S.goldEggs+'✨':'');
-  $('lvlname').textContent = `Lv.${S.level} ${S.flock[0].name}`;
+  const stg=STAGES[stageOf(S.level)];
+  $('lvlname').textContent = `Lv.${S.level} ${stg.n}`;
+  if(stg.sky) farm.dataset.sky=stg.sky; else delete farm.dataset.sky;
+  $('cosmos').textContent = stg.ic||'';
   $('xpbar').style.width = (S.xp/xpNeed(S.level)*100)+'%';
   setBar('sHunger',S.hunger); setBar('sHappy',S.happy); setBar('sClean',S.clean);
   $('grainCnt').textContent = `${S.grain} (ใช้ ${feedCost()})`;
-  $('sellInfo').textContent = `${S.eggs*5+S.goldEggs*60} 🪙`;
+  $('sellInfo').textContent = `${sellValue()} 🪙`;
   if(!S.up.dog) $('dog').style.display='none';
   chickens.forEach(updateSize);
   const inc=$('incub');
@@ -461,13 +560,15 @@ requestAnimationFrame(frame);
 
 /* ---------- gameplay ---------- */
 function addXp(n){
-  S.xp += n;
+  S.xp += n*(1+bonus('xp'));
+  const st0=stageOf(S.level);
   while(S.xp >= xpNeed(S.level)){
     S.xp -= xpNeed(S.level); S.level++;
     const c=center(chickens[0]); fx('⬆️ เลเวลอัพ!', c.x, c.y-c.h*.4, '#d9531e');
     S.coins += 10 + S.level; toast(`เลเวล ${S.level}! ได้โบนัส ${10+S.level} 🪙`);
     beep(880,.2,'triangle',.08); setTimeout(()=>beep(1180,.25,'triangle',.08),120);
   }
+  if(stageOf(S.level)!==st0){ toast(`🎉 ไก่โตขึ้นเป็น "${STAGES[stageOf(S.level)].n}"!`); chickens.forEach(updateSize); }
 }
 const feedCost = () => Math.ceil(chickens.length/2);
 
@@ -534,14 +635,14 @@ const itemCount = k => farm.querySelectorAll('.item.'+k).length;
 
 function sell(){
   if(!S.eggs && !S.goldEggs){ toast('ยังไม่มีไข่ให้ขาย'); return; }
-  const gain=S.eggs*5+S.goldEggs*60;
+  const gain=sellValue();
   S.coins+=gain; S.eggs=0; S.goldEggs=0;
   toast(`ขายไข่ได้ ${gain} 🪙`); beep(1000,.08,'square',.05); setTimeout(()=>beep(1300,.1,'square',.05),80);
   render(); save();
 }
 
 function layEgg(){
-  const gold = Math.random() < .06 + S.level*.003;
+  const gold = Math.random() < .06 + S.level*.003 + bonus('gold');
   const k = pick(adults()), c=center(k);
   const el = spawnItem(gold?'gold':'egg', gold?'🥇':'🥚', {x:c.x+rnd(-40,40), y:c.y+c.h*.35});
   if(!gold) el.classList.add('egg');
@@ -582,7 +683,7 @@ function spawnEnemy(typeKey){
   const e={type:typeKey, T, el, hpEl, hp:T.hp, x:fromLeft?-30:w+30, y:rnd(h*.62,h*.9), dir:fromLeft?1:-1, state:'attack', target:null, dog:0};
   el.style.fontSize='46px';
   if(!fromLeft) el.style.scale='-1 1'; // face the farm
-  el.addEventListener('pointerdown', ev=>{ ev.preventDefault(); hitEnemy(e,false); });
+  el.addEventListener('pointerdown', ev=>{ ev.preventDefault(); hitEnemy(e,false); if(Math.random()<bonus('guard')) hitEnemy(e,false); });
   farm.appendChild(el); enemies.push(e); showHp(e);
   const W=$('warn'); W.textContent=`${T.ic} ${T.name}มาแล้ว! แตะไล่เร็ว!`; W.classList.remove('show'); void W.offsetWidth; W.classList.add('show');
   beep(200,.25,'sawtooth',.06); buzz([60,40,60]);
@@ -596,7 +697,7 @@ function hitEnemy(e, byDog){
   fx(byDog?'🐕 งับ!':'💥', e.x, e.y-30, '#b3261e'); beep(250,.06,'square',.06); buzz(15);
   if(e.hp<=0){
     e.state='dead'; S.enemiesBeaten++;
-    const gain=e.T.coin + Math.floor(S.level/2); S.coins+=gain; addXp(8);
+    const gain=Math.round((e.T.coin + Math.floor(S.level/2))*(1+bonus('coin'))); S.coins+=gain; addXp(8);
     fx(`+${gain}🪙`, e.x, e.y-50, '#b8860b'); toast(`ไล่${e.T.name}ไปได้แล้ว +${gain} 🪙`);
     e.el.style.transition='transform .5s, opacity .5s'; e.el.style.opacity=0;
     setTimeout(()=>{ e.el.remove(); },500); render(); save();
@@ -674,13 +775,13 @@ function maybeSpawnEnemy(dt){
 let lastTick=Date.now(), pickTimer=0;
 function tick(dt){
   const toyMul = 1 - S.up.toy*.2;
-  S.hunger = clamp(S.hunger - dt*0.45*(1+.08*(chickens.length-1)));
-  S.happy  = clamp(S.happy  - dt*0.30*toyMul - (S.hunger<25?dt*.25:0) - (S.clean<25?dt*.2:0));
-  S.clean  = clamp(S.clean  - dt*0.22);
+  S.hunger = clamp(S.hunger - dt*0.45*(1+.08*(chickens.length-1))*(1-bonus('hunger')));
+  S.happy  = clamp(S.happy  - dt*0.30*toyMul*(1-bonus('happy')) - (S.hunger<25?dt*.25:0) - (S.clean<25?dt*.2:0));
+  S.clean  = clamp(S.clean  - dt*0.22*(1-bonus('clean')));
 
   const ad=adults();
   if(S.hunger>35 && S.happy>35 && ad.length){
-    const speed = (1 + S.up.coop*.15 + (S.happy>75?.2:0)) * (1 + .6*(ad.length-1));
+    const speed = (1 + S.up.coop*.15 + (S.happy>75?.2:0)) * (1 + .6*(ad.length-1)) * (1 + bonus('egg'));
     S.eggTimer += dt*speed;
     if(S.eggTimer >= 35){ S.eggTimer=0; if(itemCount('egg')+itemCount('gold')<8) layEgg(); }
   }
@@ -752,10 +853,12 @@ function renderShop(){
     if(l>=u.max) h += row(u.ic,`${u.name} (MAX)`,'อัปสุดแล้ว','เต็ม',true,'');
     else { const c=u.cost(l); h += row(u.ic,`${u.name} Lv.${l}`,u.desc(l),`${c} 🪙`,S.coins<c,`up:${k}`); }
   });
-  h += `<h3>หมวก</h3>`;
+  h += `<h3>กาชา</h3>`;
+  h += row('🎰','กาชาเครื่องแต่งกาย','หมวก/แว่น/ของคล้องคอ/ของติดหลัง มีพลังพิเศษ','เปิด',false,'gacha');
+  h += `<h3>หมวก (แต่งสวย)</h3>`;
   HATS.forEach(hat=>{
     const owned=S.hats.includes(hat.id);
-    if(owned) h += row(hat.ic,hat.name,'ของคุณ · ใส่ได้ที่ปุ่ม 🐔 ด้านบน','มีแล้ว',true,'');
+    if(owned) h += row(hat.ic,hat.name,'ของคุณ · ใส่ได้ที่ปุ่ม 🐔 ฝูงไก่','มีแล้ว',true,'');
     else h += row(hat.ic,hat.name,'เปลี่ยนลุคไก่',`${hat.price} 🪙`,S.coins<hat.price,`hat:${hat.id}:${hat.price}`);
   });
   h += `<h3>ตั้งค่า</h3>`;
@@ -774,9 +877,10 @@ $('sheet').addEventListener('click', e=>{
   const [type,a,c,d]=b.dataset.act.split(':');
   if(type==='buy'){ const n=+c,p=+d; if(S.coins>=p){ S.coins-=p; S.grain+=n; beep(800,.07,'square',.05);} }
   else if(type==='up'){ const u=UPS[a], cost=u.cost(S.up[a]); if(S.coins>=cost && S.up[a]<u.max){ S.coins-=cost; S.up[a]++; toast('อัปเกรดแล้ว!'); beep(900,.15,'triangle',.07);} }
-  else if(type==='hat'){ const p=+c; if(S.coins>=p){ S.coins-=p; S.hats.push(a); toast('ซื้อหมวกแล้ว! ไปใส่ที่ปุ่ม 🐔 ด้านบน'); beep(900,.15,'triangle',.07);} }
+  else if(type==='hat'){ const p=+c; if(S.coins>=p){ S.coins-=p; S.hats.push(a); toast('ซื้อหมวกแล้ว! ไปใส่ที่ปุ่ม 🐔 ฝูงไก่'); beep(900,.15,'triangle',.07);} }
   else if(type==='incub'){ startIncubate(a==='g'); }
   else if(type==='export'){ exportSave(); }
+  else if(type==='gacha'){ openGacha(); }
   else if(type==='import'){ if(importSave()) return; }
   else if(type==='reset'){
     if(confirm('เริ่มเกมใหม่? ข้อมูลทั้งหมดจะถูกลบและกู้คืนไม่ได้')){
@@ -816,30 +920,94 @@ function openFlock(){ $('flock').classList.add('open'); renderFlock(); }
 function closeFlock(){ $('flock').classList.remove('open'); }
 $('flock').addEventListener('pointerdown', e=>{ if(e.target===$('flock')) closeFlock(); });
 $('bFlock').onclick = openFlock;
+const slotOptions = sl => { const ids = sl==='hat' ? S.hats.slice() : ['none']; GEAR.forEach(g=>{ if(g.slot===sl && S.gear[g.id]) ids.push(g.id); }); return ids; };
 function renderFlock(){
+  const stg=STAGES[stageOf(S.level)], nx=STAGES[stageOf(S.level)+1];
   let h=`<h2>🐔 ฝูงไก่ของฉัน (${chickens.length}/${MAX_FLOCK}) <button class="x" id="xF">✕</button></h2>`;
+  h+=`<div style="font-size:12px;font-weight:700;margin-bottom:6px">ระดับ: ${stg.n}${nx?` · ถึง "${nx.n}" ที่ Lv.${nx.lv}`:' · สูงสุดแล้ว!'}</div>`;
+  const bs=Object.keys(STAT).filter(k=>bonus(k)>0).map(k=>`${STAT[k]} +${Math.round(bonus(k)*100)}%`);
+  h+=`<div class="bonus">💪 พลังรวมจากเครื่องแต่งกาย: ${bs.length?bs.join(' · '):'ยังไม่มี'}</div>`;
+  h+=`<button class="big" style="margin:0 0 8px" id="goGacha">🎰 กาชาเครื่องแต่งกาย</button>`;
   chickens.forEach(c=>{
     const d=c.data, p=ageProg(d), C=COLORS[d.color]||COLORS.gold;
     const st = isAdult(d) ? 'โตเต็มวัย' : `ลูกไก่ โตแล้ว ${Math.floor(p*100)}%`;
     h+=`<div class="fr"><div class="top"><div class="th"><img src="${c.img.src}" alt=""><span>${d.hat==='none'?'':d.hat}</span></div>
       <div class="tx"><b>${d.name}</b>สี${C.name} · ${st}</div>
-      <button class="hb" data-edit="${d.id}" title="ชื่อ/สี">✏️</button></div>
-      <div class="hats">${S.hats.map(id=>{ const ht=HATS.find(x=>x.id===id); return ht?`<button class="hb ${d.hat===id?'on':''}" data-wear="${d.id}:${id}" title="${ht.name}">${ht.ic}</button>`:''; }).join('')}</div></div>`;
+      <button class="hb" data-edit="${d.id}" title="ชื่อ/สี">✏️</button></div>`;
+    Object.entries(SLOTS).forEach(([sl,lab])=>{
+      h+=`<div class="lab">${lab}</div><div class="hats">${slotOptions(sl).map(id=>{
+        const g=GMAP[id], ht=HATS.find(x=>x.id===id), nm=g?`${g.n} (${gearDesc(g)})`:(ht?ht.name:'');
+        return `<button class="hb ${d[sl]===id?'on':''}" data-wear="${d.id}:${sl}:${id}" title="${nm}" ${g?`style="border-color:${RARITY[g.r].col}"`:''}>${id==='none'?'🚫':id}</button>`; }).join('')}</div>`;
+    });
+    const worn=['hat','face','neck','back'].map(sl=>GMAP[d[sl]]).filter(Boolean);
+    if(worn.length) h+=`<div class="ab">${worn.map(g=>`${g.id} ${gearDesc(g)}`).join('<br>')}</div>`;
+    h+=`</div>`;
   });
-  h+=`<div style="font-size:12px;opacity:.7">ซื้อหมวกเพิ่มได้ที่ร้านค้า · ลากไก่ในฟาร์มเพื่อย้ายตำแหน่ง</div>`;
+  h+=`<div style="font-size:12px;opacity:.7">ซื้อหมวกแต่งสวยที่ร้านค้า · ลากไก่ในฟาร์มเพื่อย้ายตำแหน่ง · เครื่องแต่งกายซ้ำ = เลเวลของชิ้นนั้นเพิ่ม (สูงสุด Lv.3)</div>`;
   const st=$('fsheet').scrollTop; $('fsheet').innerHTML=h; $('fsheet').scrollTop=st;
 }
 $('fsheet').addEventListener('click', e=>{
   if(e.target.id==='xF') return closeFlock();
+  if(e.target.id==='goGacha') return openGacha();
   const w=e.target.closest('[data-wear]');
   if(w){
-    const [id,hat]=w.dataset.wear.split(':'), c=chickens.find(k=>k.data.id==id); if(!c) return;
-    c.data.hat=hat; updateSize(c); anim(c,'bounce'); beep(800,.08,'triangle',.05); save(); renderFlock(); return;
+    const [id,sl,item]=w.dataset.wear.split(':'), c=chickens.find(k=>k.data.id==id); if(!c) return;
+    c.data[sl]=item; updateSize(c); anim(c,'bounce'); beep(800,.08,'triangle',.05); save(); renderFlock(); return;
   }
   const ed=e.target.closest('[data-edit]');
   if(ed){ const c=chickens.find(k=>k.data.id==ed.dataset.edit); if(c){ closeFlock(); openModal(c); } }
 });
 setInterval(()=>{ if($('flock').classList.contains('open')) renderFlock(); },3000);
+
+/* ---------- gacha ---------- */
+let lastPulls=[];
+function openGacha(){ $('gacha').classList.add('open'); renderGacha(); }
+function closeGacha(){ $('gacha').classList.remove('open'); lastPulls=[]; if($('flock').classList.contains('open')) renderFlock(); }
+$('gacha').addEventListener('pointerdown', e=>{ if(e.target===$('gacha')) closeGacha(); });
+function rollGear(){
+  S.pity++;
+  let r;
+  if(S.pity>=PITY) r = Math.random()<.2 ? 'l' : 'e';
+  else { const x=Math.random()*100; r = x<2?'l':x<12?'e':x<40?'r':'c'; }
+  if(r==='e'||r==='l') S.pity=0;
+  const g=pick(GEAR.filter(k=>k.r===r)), had=S.gear[g.id]||0;
+  S.gear[g.id]=had+1; S.pulls++;
+  return {g, isNew:!had, lv:Math.min(3,had+1), maxed:had>=3};
+}
+function doPull(n){
+  const cost = n===10 ? PULL10 : PULL1;
+  if(S.coins<cost) return toast('เหรียญไม่พอ');
+  S.coins-=cost; lastPulls=[];
+  for(let i=0;i<n;i++) lastPulls.push(rollGear());
+  const top=lastPulls.reduce((m,x)=>'cresl'.indexOf(x.g.r)>'cresl'.indexOf(m)?x.g.r:m,'c');
+  beep(600,.1,'triangle',.06); setTimeout(()=>beep(top==='l'?1500:top==='e'?1200:900,.2,'triangle',.07),150);
+  if(top==='e'||top==='l') buzz(40);
+  chickens.forEach(updateSize); render(); save(); renderGacha();
+}
+function renderGacha(){
+  let h=`<h2>🎰 กาชาเครื่องแต่งกาย <span style="font-size:15px">🪙 ${Math.floor(S.coins)}</span><button class="x" id="xG">✕</button></h2>`;
+  if(lastPulls.length){
+    h+=`<div class="gg">${lastPulls.map((x,i)=>`<div class="gc" style="border-color:${RARITY[x.g.r].col};animation-delay:${i*60}ms"><i>${x.g.id}</i><span style="color:${RARITY[x.g.r].col}">${x.g.n}</span><br>${x.isNew?'✨ใหม่!':x.maxed?'Lv.3 (MAX)':'Lv.'+x.lv+' ⬆'}</div>`).join('')}</div>`;
+  }
+  h+=`<button class="big" data-pull="1" ${S.coins<PULL1?'disabled':''}>สุ่ม 1 ครั้ง · ${PULL1} 🪙</button>`;
+  h+=`<button class="big" data-pull="10" ${S.coins<PULL10?'disabled':''}>สุ่ม 10 ครั้ง · ${PULL10} 🪙</button>`;
+  h+=`<div style="font-size:12px;opacity:.75;margin-top:6px">โอกาส: ธรรมดา 60% · หายาก 28% · หายากมาก 10% · ตำนาน 2% · การันตีหายากมากขึ้นไปใน ${Math.max(1,PITY-S.pity)} ครั้ง</div>`;
+  h+=`<h3>คลังเครื่องแต่งกาย (${GEAR.filter(g=>S.gear[g.id]).length}/${GEAR.length})</h3>`;
+  Object.entries(SLOTS).forEach(([sl,lab])=>{
+    h+=`<div class="lab" style="font-size:12px;font-weight:800;margin-top:8px">${lab}</div>`;
+    GEAR.filter(g=>g.slot===sl).forEach(g=>{
+      const own=S.gear[g.id], R=RARITY[g.r];
+      h+= own ? `<div class="cr"><div class="ic">${g.id}</div><div class="tx"><b style="color:${R.col}">${g.n}</b> · ${R.n} · Lv.${gearLv(g.id)}<br>${gearDesc(g)}</div></div>`
+              : `<div class="cr" style="opacity:.5"><div class="ic">❔</div><div class="tx"><b style="color:${R.col}">???</b> · ${R.n}</div></div>`;
+    });
+  });
+  h+=`<button class="big" id="xG2" style="background:#999;border-bottom-color:#777">ปิด</button>`;
+  const st=$('gsheet').scrollTop; $('gsheet').innerHTML=h; $('gsheet').scrollTop=st;
+}
+$('gsheet').addEventListener('click', e=>{
+  if(e.target.id==='xG'||e.target.id==='xG2') return closeGacha();
+  const b=e.target.closest('[data-pull]'); if(b&&!b.disabled) doPull(+b.dataset.pull);
+});
 
 /* ---------- rename / recolour modal ---------- */
 let editing=null, draftColor=null, draftName='';
