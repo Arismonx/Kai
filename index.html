@@ -28,14 +28,14 @@ html,body{margin:0;height:100%;overflow:hidden;background:#8ed1fc;font-family:"S
 .stat .bar i{display:block;height:100%;width:100%;transition:width .3s,background .3s}
 
 /* farm */
-#farm{position:relative;flex:1;min-height:0;overflow:hidden}
+#farm{position:relative;flex:1;min-height:0;overflow:hidden;isolation:isolate}
 #sky{position:absolute;inset:0;background:linear-gradient(#8ed1fc 0%,#c9ecff 55%,#a8dd7a 55%,#7cc254 100%)}
 .cloud{position:absolute;font-size:46px;opacity:.9;animation:drift linear infinite}
 @keyframes drift{from{transform:translateX(-80px)}to{transform:translateX(560px)}}
 #barn{position:absolute;right:6px;top:calc(55% - 62px);font-size:70px;filter:drop-shadow(0 3px 0 rgba(0,0,0,.12))}
 #fence{position:absolute;left:0;right:0;top:calc(55% - 18px);text-align:center;font-size:22px;letter-spacing:-2px;white-space:nowrap;overflow:hidden;opacity:.9}
 .ck{position:absolute;left:50%;top:58%;width:0;height:0}
-.ck img{position:absolute;left:0;top:0;width:170px;transform:translate(-50%,-62%);transform-origin:50% 90%;cursor:pointer;
+.ck img{position:absolute;left:0;top:0;width:170px;translate:-50% -62%;transform-origin:50% 90%;cursor:grab;touch-action:none;
   filter:drop-shadow(0 12px 6px rgba(0,0,0,.22));will-change:transform;-webkit-user-drag:none;pointer-events:auto}
 .ck .sh{position:absolute;left:0;top:0;width:140px;height:20px;border-radius:50%;background:rgba(0,0,0,.18);transform:translate(-50%,100px)}
 .ck .hat{position:absolute;left:0;top:0;font-size:40px;pointer-events:none}
@@ -43,31 +43,31 @@ html,body{margin:0;height:100%;overflow:hidden;background:#8ed1fc;font-family:"S
   padding:1px 9px;font-size:12px;font-weight:800;white-space:nowrap;cursor:pointer;pointer-events:auto}
 .ck .tag.chickTag::before{content:"🐥 "}
 #incub{position:absolute;left:8px;top:6px;z-index:6;background:var(--card);border:2px solid var(--line);border-radius:999px;padding:2px 10px;font-size:13px;font-weight:800;display:none}
-#dog{position:absolute;left:8px;bottom:6px;font-size:40px;z-index:4;display:none}
-.enemy{position:absolute;font-size:46px;z-index:30;transform:translate(-50%,-50%);cursor:pointer;filter:drop-shadow(0 6px 3px rgba(0,0,0,.25))}
+#dog{position:absolute;left:0;top:0;font-size:40px;z-index:35;display:none;pointer-events:none;will-change:transform}
+.enemy{position:absolute;font-size:46px;z-index:50;translate:-50% -50%;cursor:pointer;filter:drop-shadow(0 6px 3px rgba(0,0,0,.25))}
 .enemy .hp{position:absolute;left:50%;top:-8px;transform:translateX(-50%);font-size:12px;white-space:nowrap;letter-spacing:-1px}
 .enemy.hit{animation:shake .25s}
 @keyframes shake{25%{margin-left:-8px}75%{margin-left:8px}}
-#warn{position:absolute;left:0;right:0;top:30%;text-align:center;font-size:20px;font-weight:900;color:#fff;text-shadow:0 2px 0 #b3261e,0 0 8px #b3261e;z-index:25;opacity:0;pointer-events:none}
+#warn{position:absolute;left:0;right:0;top:30%;text-align:center;font-size:20px;font-weight:900;color:#fff;text-shadow:0 2px 0 #b3261e,0 0 8px #b3261e;z-index:55;opacity:0;pointer-events:none}
 #warn.show{animation:warn 1.6s}
 @keyframes warn{0%,100%{opacity:0}15%,80%{opacity:1}}
 #bubble{position:absolute;left:50%;top:6%;transform:translateX(-50%);background:#fff;border:2px solid var(--ink);border-radius:14px;padding:5px 12px;font-weight:700;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;z-index:4}
 #bubble.show{opacity:1}
-.fx{position:absolute;pointer-events:none;font-weight:800;z-index:6;animation:rise 1s ease-out forwards;text-shadow:0 1px 0 #fff}
+.fx{position:absolute;pointer-events:none;font-weight:800;z-index:45;animation:rise 1s ease-out forwards;text-shadow:0 1px 0 #fff}
 @keyframes rise{from{transform:translate(-50%,0);opacity:1}to{transform:translate(-50%,-70px);opacity:0}}
-.item{position:absolute;font-size:34px;cursor:pointer;z-index:5;transform:translate(-50%,-50%);animation:pop .3s ease-out}
+.item{position:absolute;font-size:34px;cursor:pointer;z-index:40;transform:translate(-50%,-50%);animation:pop .3s ease-out}
 @keyframes pop{from{transform:translate(-50%,-50%) scale(0)}to{transform:translate(-50%,-50%) scale(1)}}
 .item.egg{animation:pop .3s ease-out,wob 1s ease-in-out infinite .3s}
 @keyframes wob{50%{transform:translate(-50%,-50%) rotate(12deg)}}
 .grain{position:absolute;font-size:18px;z-index:3;pointer-events:none;transform:translate(-50%,-50%)}
 
 /* actions */
-#actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:8px 10px;background:linear-gradient(#7cc254,#5fa83c)}
-.btn{background:var(--card);border:3px solid var(--line);border-bottom-width:6px;border-radius:16px;padding:6px 2px;font-size:13px;font-weight:800;color:var(--ink);font-family:inherit;line-height:1.15}
-.btn b{display:block;font-size:26px}
+#actions{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;padding:8px 6px;background:linear-gradient(#7cc254,#5fa83c)}
+.btn{background:var(--card);border:3px solid var(--line);border-bottom-width:6px;border-radius:16px;padding:6px 0;font-size:12px;min-width:0;font-weight:800;color:var(--ink);font-family:inherit;line-height:1.15}
+.btn b{display:block;font-size:24px}
 .btn:active{transform:translateY(3px);border-bottom-width:3px}
 .btn[disabled]{opacity:.5}
-.btn small{display:block;font-weight:600;opacity:.75;font-size:11px}
+.btn small{display:block;font-weight:600;opacity:.75;font-size:10px;white-space:nowrap}
 
 /* shop */
 .ov{position:absolute;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;z-index:20}
@@ -83,6 +83,16 @@ html,body{margin:0;height:100%;overflow:hidden;background:#8ed1fc;font-family:"S
 .sheet input[type=text]{width:100%;font:inherit;font-size:18px;font-weight:700;padding:8px 12px;border:2px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);user-select:text;-webkit-user-select:text}
 .big{width:100%;margin-top:10px;background:var(--accent);color:#fff;border:0;border-bottom:5px solid #c9622a;border-radius:14px;padding:10px;font-weight:800;font-size:16px;font-family:inherit}
 .x{background:none;border:0;font-size:26px;color:var(--ink)}
+.fr{background:#fff;border:2px solid var(--line);border-radius:14px;padding:8px 10px;margin-bottom:8px}
+.fr .top{display:flex;align-items:center;gap:10px}
+.fr .th{position:relative;width:54px;height:54px;flex:none}
+.fr .th img{width:100%;height:100%;object-fit:contain}
+.fr .th span{position:absolute;left:-4px;top:-8px;font-size:22px;transform:rotate(-14deg)}
+.fr .tx{flex:1;min-width:0;font-size:13px}
+.fr .tx b{font-size:15px;display:block}
+.fr .hats{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.hb{width:42px;height:42px;font-size:22px;border-radius:12px;border:2px solid var(--line);background:var(--card);padding:0;font-family:inherit}
+.hb.on{border-color:var(--accent);background:#ffe3cc}
 .row{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid var(--line);border-radius:14px;padding:8px 10px;margin-bottom:8px}
 .row .ic{font-size:30px}
 .row .tx{flex:1;min-width:0;font-size:13px}
@@ -96,9 +106,9 @@ html,body{margin:0;height:100%;overflow:hidden;background:#8ed1fc;font-family:"S
 
 /* chicken animations */
 .ck img.bounce{animation:bounce .35s}
-@keyframes bounce{30%{transform:translate(-50%,-62%) scale(1.14,.86)}60%{transform:translate(-50%,-62%) scale(.94,1.08)}}
+@keyframes bounce{30%{transform:scale(1.14,.86)}60%{transform:scale(.94,1.08)}}
 .ck img.eat{animation:eat .25s 3}
-@keyframes eat{50%{transform:translate(-50%,-62%) rotate(7deg) scale(1.03)}}
+@keyframes eat{50%{transform:rotate(7deg) scale(1.03)}}
 .ck img.sad{filter:drop-shadow(0 12px 6px rgba(0,0,0,.22)) saturate(.55) brightness(.92)}
 </style>
 </head>
@@ -129,10 +139,12 @@ html,body{margin:0;height:100%;overflow:hidden;background:#8ed1fc;font-family:"S
     <button class="btn" id="bFeed"><b>🌾</b>ให้อาหาร<small id="grainCnt"></small></button>
     <button class="btn" id="bWash"><b>🛁</b>อาบน้ำ</button>
     <button class="btn" id="bSell"><b>💰</b>ขายไข่<small id="sellInfo"></small></button>
+    <button class="btn" id="bFlock"><b>🐔</b>ฝูงไก่<small id="flockCnt"></small></button>
     <button class="btn" id="bShop"><b>🛒</b>ร้านค้า</button>
   </div>
 
   <div id="shop" class="ov"><div id="sheet" class="sheet"></div></div>
+  <div id="flock" class="ov"><div id="fsheet" class="sheet"></div></div>
   <div id="modal" class="ov"><div id="msheet" class="sheet"></div></div>
   <div id="toast"></div>
 </div>
@@ -147,13 +159,14 @@ const pick = a => a[Math.floor(Math.random()*a.length)];
 const clamp = (v,a=0,b=100) => Math.max(a,Math.min(b,v));
 
 /* ---------- state ---------- */
+const PICK_SEC = [14,8,4];
 const MAX_FLOCK = 5, GROW_SEC = 300, HATCH_SEC = 90, HATCH_EGGS = 3;
 const defaults = () => ({
   coins: 20, grain: 8, eggs: 0, goldEggs: 0,
   hunger: 80, happy: 80, clean: 100,
   xp: 0, level: 1,
   eggTimer: 0,
-  up: { feeder:0, coop:0, toy:0, soap:0, dog:0 },
+  up: { feeder:0, coop:0, toy:0, soap:0, dog:0, picker:0 },
   hats: ['none'], hat: 'none',
   feederTimer: 0,
   flock: [{id:1, name:'ไก่กลม', color:'gold', born:0}],
@@ -195,7 +208,8 @@ const UPS = {
   coop:  {ic:'🪹',name:'รังไข่สุดนุ่ม',desc:l=>`ไข่ออกเร็วขึ้น ${l*15}% → ${(l+1)*15}%`,max:5,cost:l=>60*(l+1)**2},
   toy:   {ic:'🧸',name:'ของเล่นไก่',desc:l=>`ความสุขลดช้าลง ${l*20}% → ${(l+1)*20}%`,max:4,cost:l=>50*(l+1)**2},
   soap:  {ic:'🧼',name:'สบู่หอม',desc:l=>`อาบน้ำแล้วสุขเพิ่ม +${10+l*8} → +${18+l*8}`,max:4,cost:l=>40*(l+1)**2},
-  dog:   {ic:'🐕',name:'สุนัขเฝ้าฟาร์ม',desc:l=>`กัดไล่ศัตรูเองทุก ${l?11-l*2:'--'} วิ → ${9-l*2} วิ`,max:3,cost:l=>100*(l+1)**2},
+  picker:{ic:'🧺',name:'ตะกร้าเก็บของอัตโนมัติ',desc:l=>`เก็บไข่และเก็บอึให้เองทุก ${l?PICK_SEC[l-1]:'--'} วิ → ${PICK_SEC[l]} วิ`,max:3,cost:l=>[400,1500,4000][l]},
+  dog:   {ic:'🐕',name:'สุนัขเฝ้าฟาร์ม',desc:l=>`วิ่งไล่กัดศัตรูเอง คูลดาวน์ ${l?(7-l*1.5):'--'} วิ → ${7-(l+1)*1.5} วิ`,max:3,cost:l=>100*(l+1)**2},
 };
 /* colour: hue = target hue (deg) or null; sm = saturation mult; lm/la = lightness mult/add; css = fallback filter */
 const COLORS = {
@@ -297,23 +311,50 @@ const chickens = [];
 function ageProg(d){ return d.born ? clamp((Date.now()-d.born)/1000/GROW_SEC,0,1) : 1; }
 function isAdult(d){ return ageProg(d)>=1; }
 function build(d){
+  if(d.hat===undefined) d.hat = d.id===1 ? (S.hat||'none') : 'none'; // migrate old global hat to the main chicken
   const el=document.createElement('div'); el.className='ck';
   el.innerHTML='<div class="sh"></div><img alt="ไก่" draggable="false"><div class="hat"></div><div class="tag"></div>';
   farm.appendChild(el);
   const c={data:d, el, img:el.querySelector('img'), hat:el.querySelector('.hat'), tag:el.querySelector('.tag'), sh:el.querySelector('.sh'),
-           x:rnd(-120,120), y:rnd(-5,15), tx:0, ty:0, w:170, look:null};
-  c.tx=c.x; c.ty=c.y;
-  c.img.addEventListener('pointerdown', e=>{ e.preventDefault(); pet(c,e); });
+           x:rnd(-120,120), y:rnd(-5,15), tx:0, ty:0, by:0, w:170, look:null, dragging:false};
+  c.tx=c.x; c.ty=c.y; c.by=c.y;
+  c.img.addEventListener('pointerdown', e=>{ e.preventDefault(); startDrag(c,e); });
   c.tag.addEventListener('pointerdown', e=>{ e.preventDefault(); e.stopPropagation(); openModal(c); });
   chickens.push(c); refreshLook(c); updateSize(c);
   return c;
+}
+/* drag a chicken to move it off the eggs; a short tap still pets it */
+function clampPos(c){
+  const w=farm.clientWidth, h=farm.clientHeight, mx=Math.max(0,(w-c.w)/2-4);
+  c.x=clamp(c.x,-mx,mx); c.y=clamp(c.y,-h*.08,h*.3);
+}
+function startDrag(c,e){
+  const sx=e.clientX, sy=e.clientY, ox=c.x, oy=c.y; let moved=false;
+  const mv=ev=>{
+    const dx=ev.clientX-sx, dy=ev.clientY-sy;
+    if(!moved && Math.hypot(dx,dy)<8) return;
+    moved=true; c.dragging=true;
+    c.x=ox+dx; c.y=oy+dy; clampPos(c); c.tx=c.x; c.ty=c.y; c.by=c.y;
+  };
+  const up=ev=>{
+    removeEventListener('pointermove',mv); removeEventListener('pointerup',up); removeEventListener('pointercancel',up);
+    c.dragging=false;
+    if(moved){ c.by=c.y; c.hold=performance.now()+4000; anim(c,'bounce'); }
+    else if(ev.type==='pointerup') pet(c,ev);
+  };
+  addEventListener('pointermove',mv); addEventListener('pointerup',up); addEventListener('pointercancel',up);
 }
 function refreshLook(c){
   const key=c.data.color, C=COLORS[key]||COLORS.gold;
   const url=makeVariant(key);
   const sig=key+(url?'v':'f');
   if(c.look===sig) return; c.look=sig;
-  c.img.src = url || 'assets/chicken.png';
+  const src = url || 'assets/chicken.png';
+  if(!c.img.getAttribute('src')) c.img.src = src;
+  else { // decode first so the chicken never blinks out while the new image loads
+    const t=new Image(); t.src=src;
+    (t.decode?t.decode():Promise.resolve()).catch(()=>{}).then(()=>{ if(c.look===sig) c.img.src=src; });
+  }
   c.img.style.filter = '';
   c.img.dataset.css = (!url && key!=='gold' && C.css) ? C.css : '';
   applyFilter(c);
@@ -327,15 +368,24 @@ function levelScale(){ return (1 + Math.min(.55,(S.level-1)*.04)) * (1 - .07*(ch
 function updateSize(c){
   const p=ageProg(c.data), main = c.data.id===1;
   const f = main ? 1 : (.5 + .3*p);
-  c.w = Math.min(170*levelScale()*f, farm.clientHeight*.4, farm.clientWidth*.5);
+  if(!farm.clientHeight || !farm.clientWidth) return; // layout not ready: keep old size instead of collapsing to 0
+  const w = Math.round(Math.min(170*levelScale()*f, farm.clientHeight*.4, farm.clientWidth*.5));
+  if(w===c.w && c.sized===c.data.hat+c.data.name+isAdult(c.data)){ applyFilter(c); return; }
+  c.sized=c.data.hat+c.data.name+isAdult(c.data); c.w=w; clampPos(c);
   c.img.style.width=c.w+'px'; c.sh.style.width=(c.w*.82)+'px';
   c.sh.style.transform=`translate(-50%,${c.w*.58}px)`;
   c.hat.style.fontSize=(c.w*.235)+'px';
-  c.hat.style.transform=`translate(${-c.w*.62}px,${-c.w*.72}px) rotate(-14deg)`;
-  c.hat.textContent = S.hat==='none'?'':S.hat;
+  setHat(c);
+  c.hat.textContent = c.data.hat==='none'?'':c.data.hat;
   c.tag.style.top=(c.w*.38+8)+'px';
   c.tag.textContent=c.data.name; c.tag.classList.toggle('chickTag', !isAdult(c.data));
   applyFilter(c);
+}
+/* the artwork faces left; flip it (and the hat) when the chicken walks right */
+function setHat(c){ const s=c.flip?-1:1; c.hat.style.transform=`translate(${-c.w*.62*s}px,${-c.w*.72}px) rotate(${-14*s}deg)`; }
+function face(c,right){
+  if(!!c.flip===right) return;
+  c.flip=right; c.img.style.scale = right?'-1 1':'1 1'; setHat(c);
 }
 function center(c){
   const r=c.img.getBoundingClientRect(), f=farm.getBoundingClientRect();
@@ -347,13 +397,14 @@ function adults(){ return chickens.filter(c=>isAdult(c.data)); }
 /* ---------- rendering ---------- */
 function render(){
   $('coins').textContent = Math.floor(S.coins);
+  $('flockCnt').textContent = `${chickens.length}/${MAX_FLOCK} ตัว`;
   $('eggs').textContent = S.eggs + (S.goldEggs? ' +'+S.goldEggs+'✨':'');
   $('lvlname').textContent = `Lv.${S.level} ${S.flock[0].name}`;
   $('xpbar').style.width = (S.xp/xpNeed(S.level)*100)+'%';
   setBar('sHunger',S.hunger); setBar('sHappy',S.happy); setBar('sClean',S.clean);
-  $('grainCnt').textContent = `ใช้ ${feedCost()} · เหลือ ${S.grain}`;
+  $('grainCnt').textContent = `${S.grain} (ใช้ ${feedCost()})`;
   $('sellInfo').textContent = `${S.eggs*5+S.goldEggs*60} 🪙`;
-  $('dog').style.display = S.up.dog? 'block':'none';
+  if(!S.up.dog) $('dog').style.display='none';
   chickens.forEach(updateSize);
   const inc=$('incub');
   if(S.incub){ inc.style.display='block'; inc.textContent=`🥚 ฟักอยู่ ${fmtT(Math.max(0,(S.incub.end-Date.now())/1000))}`; }
@@ -383,25 +434,28 @@ function setBar(id,v){
 
 /* ---------- wandering + frame loop ---------- */
 function wander(c){
-  const w=farm.clientWidth, h=farm.clientHeight;
-  c.tx = rnd(-w*.36, w*.36);
-  c.ty = rnd(-h*.03, h*.03);
+  if(c.dragging || performance.now()<(c.hold||0)) return;
+  const w=farm.clientWidth, h=farm.clientHeight, mx=Math.max(0,(w-c.w)/2-4);
+  c.tx = rnd(-mx, mx);
+  c.ty = clamp(c.by + rnd(-h*.03, h*.03), -h*.08, h*.3);
 }
 setInterval(()=>chickens.forEach(c=>{ if(Math.random()<.6) wander(c); }), 3200);
 
 const enemies = [];
 let lastFrame=performance.now();
 function frame(t){
+  requestAnimationFrame(frame);
   const dt=Math.min(.1,(t-lastFrame)/1000); lastFrame=t;
+  const k=1-Math.exp(-1.2*dt);
   chickens.forEach(c=>{
-    c.x += (c.tx-c.x)*.02; c.y += (c.ty-c.y)*.02;
+    if(!c.dragging){ c.x += (c.tx-c.x)*k; c.y += (c.ty-c.y)*k; }
     const moving = Math.abs(c.tx-c.x)>6;
+    if(moving && !c.dragging) face(c, c.tx>c.x);
     const bob = Math.sin(t/260 + c.data.id)*(moving?4:1.5);
     c.el.style.transform = `translate(${c.x}px,${c.y+bob}px)`;
-    c.el.style.zIndex = 10 + Math.round(c.y);
+    c.el.style.zIndex = 10 + clamp(Math.round(c.y/10),-5,25);
   });
-  updateEnemies(dt);
-  requestAnimationFrame(frame);
+  try{ updateEnemies(dt); updateDog(dt); }catch(err){ console.error(err); }
 }
 requestAnimationFrame(frame);
 
@@ -510,7 +564,7 @@ function checkHatch(){
   const key = gold ? pick(['pink','blue','green','purple'])
                    : (()=>{ const r=Math.random(); return r<.4?'gold':r<.7?'white':'black'; })();
   if(!S.colors.includes(key)) S.colors.push(key);
-  const d={id:S.nextId++, name:'ลูกไก่ '+(chickens.length), color:key, born:Date.now()};
+  const d={id:S.nextId++, name:'ลูกไก่ '+(chickens.length), color:key, hat:'none', born:Date.now()};
   S.flock.push(d); const c=build(d); c.x=c.tx=0; c.y=c.ty=10;
   const p=center(c); fx('🐣 ฟักแล้ว!', p.x, p.y-p.h*.5,'#d9531e');
   toast(`ลูกไก่สี${COLORS[key].name}ฟักออกมาแล้ว! แตะชื่อเพื่อตั้งชื่อ`); beep(1000,.12,'triangle',.07);
@@ -580,11 +634,31 @@ function updateEnemies(dt){
       e.x += e.dir*(e.T.speed*1.8)*dt;
       if(e.x<-60 || e.x>farm.clientWidth+60){ e.el.remove(); enemies.splice(i,1); continue; }
     }
-    if(S.up.dog && e.state==='attack'){
-      e.dog+=dt; if(e.dog >= 11-S.up.dog*2){ e.dog=0; hitEnemy(e,true); }
-    }
     e.el.style.left=e.x+'px'; e.el.style.top=e.y+'px';
   }
+}
+/* guard dog: runs after the nearest attacker, bites on arrival, otherwise rests by the fence */
+const dog={x:-999,y:0,cd:0,flip:false};
+function updateDog(dt){
+  const el=$('dog'), w=farm.clientWidth, h=farm.clientHeight;
+  if(!S.up.dog || !w || !h) return;
+  if(dog.x===-999){ dog.x=36; dog.y=h-30; }
+  dog.cd=Math.max(0,dog.cd-dt);
+  let tgt=null, best=1e9;
+  for(const e of enemies){ if(e.state!=='attack') continue; const d=Math.hypot(e.x-dog.x,e.y-dog.y); if(d<best){ best=d; tgt=e; } }
+  let tx=36, ty=h-30, run=false;
+  if(tgt){ tx=tgt.x; ty=tgt.y; run=true; }
+  const dx=tx-dog.x, dy=ty-dog.y, d=Math.hypot(dx,dy);
+  if(run && d<44){
+    if(dog.cd<=0){ hitEnemy(tgt,true); dog.cd=7-S.up.dog*1.5; }
+  } else if(d>4){
+    const sp=Math.min(d,(run?190:90)*dt);
+    dog.x+=dx/d*sp; dog.y+=dy/d*sp;
+  }
+  if(Math.abs(dx)>6){ dog.flip = dx>0; el.style.scale = dog.flip?'-1 1':'1 1'; }
+  const hop = (run&&d>=44) ? Math.abs(Math.sin(performance.now()/90))*-8 : 0;
+  el.style.translate=`${dog.x-20}px ${dog.y-20+hop}px`;
+  el.style.display='block';
 }
 function maybeSpawnEnemy(dt){
   if(performance.now()<spawnAt) return;
@@ -597,7 +671,7 @@ function maybeSpawnEnemy(dt){
 }
 
 /* ---------- main tick (1s) ---------- */
-let lastTick=Date.now();
+let lastTick=Date.now(), pickTimer=0;
 function tick(dt){
   const toyMul = 1 - S.up.toy*.2;
   S.hunger = clamp(S.hunger - dt*0.45*(1+.08*(chickens.length-1)));
@@ -615,6 +689,13 @@ function tick(dt){
   if(S.up.feeder>0){
     S.feederTimer += dt;
     if(S.feederTimer >= Math.max(20,90-S.up.feeder*15) && S.hunger<60){ if(feed(true)) S.feederTimer=0; }
+  }
+  if(S.up.picker>0){
+    pickTimer += dt;
+    if(pickTimer >= PICK_SEC[S.up.picker-1]){
+      const it = farm.querySelector('.item.gold, .item.egg, .item.poop');
+      if(it){ pickTimer=0; collect(it); } else pickTimer = PICK_SEC[S.up.picker-1]; // wait for the next item
+    }
   }
   checkHatch();
   maybeSpawnEnemy(dt);
@@ -674,7 +755,7 @@ function renderShop(){
   h += `<h3>หมวก</h3>`;
   HATS.forEach(hat=>{
     const owned=S.hats.includes(hat.id);
-    if(owned) h += row(hat.ic,hat.name, hat.id===S.hat?'กำลังใส่':'ของคุณ', hat.id===S.hat?'ใส่อยู่':'ใส่', hat.id===S.hat, `wear:${hat.id}`, hat.id===S.hat?'on':'');
+    if(owned) h += row(hat.ic,hat.name,'ของคุณ · ใส่ได้ที่ปุ่ม 🐔 ด้านบน','มีแล้ว',true,'');
     else h += row(hat.ic,hat.name,'เปลี่ยนลุคไก่',`${hat.price} 🪙`,S.coins<hat.price,`hat:${hat.id}:${hat.price}`);
   });
   h += `<h3>ตั้งค่า</h3>`;
@@ -691,8 +772,7 @@ $('sheet').addEventListener('click', e=>{
   const [type,a,c,d]=b.dataset.act.split(':');
   if(type==='buy'){ const n=+c,p=+d; if(S.coins>=p){ S.coins-=p; S.grain+=n; beep(800,.07,'square',.05);} }
   else if(type==='up'){ const u=UPS[a], cost=u.cost(S.up[a]); if(S.coins>=cost && S.up[a]<u.max){ S.coins-=cost; S.up[a]++; toast('อัปเกรดแล้ว!'); beep(900,.15,'triangle',.07);} }
-  else if(type==='hat'){ const p=+c; if(S.coins>=p){ S.coins-=p; S.hats.push(a); S.hat=a; toast('ซื้อหมวกแล้ว!'); beep(900,.15,'triangle',.07);} }
-  else if(type==='wear'){ S.hat=a; }
+  else if(type==='hat'){ const p=+c; if(S.coins>=p){ S.coins-=p; S.hats.push(a); toast('ซื้อหมวกแล้ว! ไปใส่ที่ปุ่ม 🐔 ด้านบน'); beep(900,.15,'triangle',.07);} }
   else if(type==='incub'){ startIncubate(a==='g'); }
   else if(type==='reset'){
     if(confirm('เริ่มเกมใหม่? ข้อมูลทั้งหมดจะถูกลบและกู้คืนไม่ได้')){
@@ -704,6 +784,36 @@ $('sheet').addEventListener('click', e=>{
   render(); renderShop(); save();
 });
 setInterval(()=>{ if($('shop').classList.contains('open') && S.incub) renderShop(); },1000);
+
+/* ---------- flock list: see every chicken + dress them ---------- */
+function openFlock(){ $('flock').classList.add('open'); renderFlock(); }
+function closeFlock(){ $('flock').classList.remove('open'); }
+$('flock').addEventListener('pointerdown', e=>{ if(e.target===$('flock')) closeFlock(); });
+$('bFlock').onclick = openFlock;
+function renderFlock(){
+  let h=`<h2>🐔 ฝูงไก่ของฉัน (${chickens.length}/${MAX_FLOCK}) <button class="x" id="xF">✕</button></h2>`;
+  chickens.forEach(c=>{
+    const d=c.data, p=ageProg(d), C=COLORS[d.color]||COLORS.gold;
+    const st = isAdult(d) ? 'โตเต็มวัย' : `ลูกไก่ โตแล้ว ${Math.floor(p*100)}%`;
+    h+=`<div class="fr"><div class="top"><div class="th"><img src="${c.img.src}" alt=""><span>${d.hat==='none'?'':d.hat}</span></div>
+      <div class="tx"><b>${d.name}</b>สี${C.name} · ${st}</div>
+      <button class="hb" data-edit="${d.id}" title="ชื่อ/สี">✏️</button></div>
+      <div class="hats">${S.hats.map(id=>{ const ht=HATS.find(x=>x.id===id); return ht?`<button class="hb ${d.hat===id?'on':''}" data-wear="${d.id}:${id}" title="${ht.name}">${ht.ic}</button>`:''; }).join('')}</div></div>`;
+  });
+  h+=`<div style="font-size:12px;opacity:.7">ซื้อหมวกเพิ่มได้ที่ร้านค้า · ลากไก่ในฟาร์มเพื่อย้ายตำแหน่ง</div>`;
+  const st=$('fsheet').scrollTop; $('fsheet').innerHTML=h; $('fsheet').scrollTop=st;
+}
+$('fsheet').addEventListener('click', e=>{
+  if(e.target.id==='xF') return closeFlock();
+  const w=e.target.closest('[data-wear]');
+  if(w){
+    const [id,hat]=w.dataset.wear.split(':'), c=chickens.find(k=>k.data.id==id); if(!c) return;
+    c.data.hat=hat; updateSize(c); anim(c,'bounce'); beep(800,.08,'triangle',.05); save(); renderFlock(); return;
+  }
+  const ed=e.target.closest('[data-edit]');
+  if(ed){ const c=chickens.find(k=>k.data.id==ed.dataset.edit); if(c){ closeFlock(); openModal(c); } }
+});
+setInterval(()=>{ if($('flock').classList.contains('open')) renderFlock(); },3000);
 
 /* ---------- rename / recolour modal ---------- */
 let editing=null, draftColor=null, draftName='';
