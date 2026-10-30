@@ -759,6 +759,8 @@ function renderShop(){
     else h += row(hat.ic,hat.name,'เปลี่ยนลุคไก่',`${hat.price} 🪙`,S.coins<hat.price,`hat:${hat.id}:${hat.price}`);
   });
   h += `<h3>ตั้งค่า</h3>`;
+  h += row('📤','สำรองข้อมูล','คัดลอกรหัสเซฟเก็บไว้ ย้ายเครื่องได้','คัดลอก',false,'export');
+  h += row('📥','กู้ข้อมูล','วางรหัสเซฟที่สำรองไว้ (ทับเซฟตอนนี้)','วางรหัส',false,'import');
   h += row('🔄','เริ่มเกมใหม่','ลบไก่ เหรียญ และความคืบหน้าทั้งหมด','เริ่มใหม่',false,'reset');
   const st=$('sheet').scrollTop;
   $('sheet').innerHTML = h; $('sheet').scrollTop=st;
@@ -774,6 +776,8 @@ $('sheet').addEventListener('click', e=>{
   else if(type==='up'){ const u=UPS[a], cost=u.cost(S.up[a]); if(S.coins>=cost && S.up[a]<u.max){ S.coins-=cost; S.up[a]++; toast('อัปเกรดแล้ว!'); beep(900,.15,'triangle',.07);} }
   else if(type==='hat'){ const p=+c; if(S.coins>=p){ S.coins-=p; S.hats.push(a); toast('ซื้อหมวกแล้ว! ไปใส่ที่ปุ่ม 🐔 ด้านบน'); beep(900,.15,'triangle',.07);} }
   else if(type==='incub'){ startIncubate(a==='g'); }
+  else if(type==='export'){ exportSave(); }
+  else if(type==='import'){ if(importSave()) return; }
   else if(type==='reset'){
     if(confirm('เริ่มเกมใหม่? ข้อมูลทั้งหมดจะถูกลบและกู้คืนไม่ได้')){
       resetting=true;
@@ -783,6 +787,28 @@ $('sheet').addEventListener('click', e=>{
   }
   render(); renderShop(); save();
 });
+/* save backup: S as base64 text with a "KAI1:" prefix so it can be pasted back later */
+const encodeSave = () => 'KAI1:' + btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+function exportSave(){
+  save();
+  const code=encodeSave();
+  const done=()=>toast('คัดลอกรหัสเซฟแล้ว เก็บไว้ที่ปลอดภัยนะ');
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(done, ()=>prompt('คัดลอกรหัสเซฟนี้เก็บไว้:',code));
+  else prompt('คัดลอกรหัสเซฟนี้เก็บไว้:',code);
+}
+function importSave(){
+  const t=(prompt('วางรหัสเซฟที่นี่')||'').trim(); if(!t) return false;
+  let o;
+  try{
+    if(!t.startsWith('KAI1:')) throw 0;
+    o=JSON.parse(decodeURIComponent(escape(atob(t.slice(5)))));
+    if(!o || typeof o!=='object' || !Array.isArray(o.flock) || !o.flock.length || typeof o.coins!=='number') throw 0;
+  }catch(e){ toast('รหัสเซฟไม่ถูกต้อง'); return false; }
+  if(!confirm('กู้ข้อมูลนี้? เซฟปัจจุบันจะถูกทับและกู้คืนไม่ได้')) return false;
+  resetting=true;
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(o)); }catch(e){ resetting=false; toast('บันทึกไม่ได้'); return false; }
+  location.reload(); return true;
+}
 setInterval(()=>{ if($('shop').classList.contains('open') && S.incub) renderShop(); },1000);
 
 /* ---------- flock list: see every chicken + dress them ---------- */
