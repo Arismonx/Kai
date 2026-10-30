@@ -27,6 +27,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:#8ed1fc;font-family:"S
 .stat .bar{height:8px;background:#ecd9b0;border-radius:4px;margin-top:2px;overflow:hidden}
 .stat .bar i{display:block;height:100%;width:100%;transition:width .3s,background .3s}
 
+#subbar{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 10px 6px;z-index:5}
+#bLb{background:var(--card);border:2px solid var(--line);border-bottom-width:4px;border-radius:12px;padding:7px 4px;font:inherit;font-size:16px;font-weight:800;color:var(--ink)}
+#bLb:active{transform:translateY(2px);border-bottom-width:2px}
+
 /* farm */
 #farm{position:relative;flex:1;min-height:0;overflow:hidden;isolation:isolate}
 #sky{position:absolute;inset:0;background:linear-gradient(#8ed1fc 0%,#c9ecff 55%,#a8dd7a 55%,#7cc254 100%)}
@@ -157,6 +161,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#8ed1fc;font-family:"S
     <div class="stat">🫧 สะอาด<div class="bar"><i id="sClean"></i></div></div>
   </div>
 
+  <div id="subbar"><button id="bLb">🏆 อันดับ</button></div>
+
   <div id="farm">
     <div id="sky"></div>
     <div id="barn">🏠</div>
@@ -178,6 +184,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#8ed1fc;font-family:"S
 
   <div id="shop" class="ov"><div id="sheet" class="sheet"></div></div>
   <div id="flock" class="ov"><div id="fsheet" class="sheet"></div></div>
+  <div id="lb" class="ov"><div id="lsheet" class="sheet"></div></div>
   <div id="gacha" class="ov"><div id="gsheet" class="sheet"></div></div>
   <div id="dress" class="ov"><div id="dsheet" class="sheet"></div></div>
   <div id="modal" class="ov"><div id="msheet" class="sheet"></div></div>
@@ -209,6 +216,7 @@ const defaults = () => ({
   colors: ['gold'],
   incub: null,
   gear: {}, pulls: 0, pity: 0,
+  playerId: '', nick: '', lbHint: false,
   lastSeen: Date.now(),
   totalEggs: 0, totalPets: 0, enemiesBeaten: 0
 });
@@ -1031,6 +1039,79 @@ $('dsheet').addEventListener('click', e=>{
   else if(k==='reset'){ if(dressC.data.pl) delete dressC.data.pl[dressSl]; setHat(dressC); }
   save(); renderDress();
 });
+
+/* ---------- online leaderboard (Supabase; anon key is public by design, writes only go through the submit_score RPC) ---------- */
+const SB_URL = 'https://hgfqnwpttuqvdcoignvb.supabase.co';
+const SB_KEY = 'sb_publishable_9_GQVCo2TQrVmJTBKKOIXg_RYSFuT4X';
+if(!S.playerId) S.playerId = (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{ const r=Math.random()*16|0; return (c==='x'?r:(r&3|8)).toString(16); }));
+async function sb(path, opt={}){
+  const ctl=new AbortController(), t=setTimeout(()=>ctl.abort(),8000);
+  try{
+    return await fetch(SB_URL+'/rest/v1/'+path, Object.assign({signal:ctl.signal}, opt, {headers:Object.assign({apikey:SB_KEY,'Content-Type':'application/json'}, opt.headers)}));
+  } finally { clearTimeout(t); }
+}
+let lastSent='';
+async function submitScore(force, unload){
+  if(!S.nick) return false;
+  const body=JSON.stringify({p_id:S.playerId, p_name:S.nick, p_level:S.level, p_eggs:Math.floor(S.totalEggs)});
+  if(!force && body===lastSent) return true;
+  try{
+    const r=await sb('rpc/submit_score',{method:'POST', body, keepalive:!!unload});
+    if(r.ok){ lastSent=body; return true; }
+  }catch(e){}
+  return false; // offline or server hiccup: just try again next time
+}
+setInterval(()=>submitScore(false), 120000);
+addEventListener('pagehide', ()=>submitScore(false,true));
+function openLb(){ $('lb').classList.add('open'); renderLb(null); loadLb(); }
+function closeLb(){ $('lb').classList.remove('open'); }
+$('lb').addEventListener('pointerdown', e=>{ if(e.target===$('lb')) closeLb(); });
+$('bLb').onclick = openLb;
+async function loadLb(){
+  let data=null, rank=null;
+  try{
+    if(S.nick) await submitScore(true);
+    const r=await sb('leaderboard?select=player_id,name,level,total_eggs&order=level.desc,total_eggs.desc&limit=20');
+    if(r.ok) data=await r.json();
+    if(data && S.nick && !data.some(x=>x.player_id===S.playerId)){
+      const q=await sb(`leaderboard?select=player_id&or=(level.gt.${S.level},and(level.eq.${S.level},total_eggs.gt.${Math.floor(S.totalEggs)}))`,{headers:{Prefer:'count=exact',Range:'0-0','Range-Unit':'items'}});
+      const m=/\/(\d+)$/.exec(q.headers.get('content-range')||''); if(m) rank=+m[1]+1;
+    }
+  }catch(e){}
+  if($('lb').classList.contains('open')) renderLb(data||false, rank);
+}
+const esc = t => String(t).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function renderLb(data, rank){
+  let h=`<h2>🏆 ตารางอันดับ <button class="x" id="xL">✕</button></h2>`;
+  h+=S.nick
+    ? `<div class="bonus">คุณคือ <b>${esc(S.nick)}</b> · Lv.${S.level} · ไข่รวม ${Math.floor(S.totalEggs)}${rank?` · อันดับ ${rank}`:''}</div>`
+    : `<div class="bonus">ตั้งชื่อเล่นเพื่อเข้าตารางอันดับ (ไม่เกิน 12 ตัวอักษร ทุกคนเห็นชื่อนี้)</div>`;
+  h+=`<input type="text" id="nickIn" maxlength="12" placeholder="ชื่อเล่นในตาราง" value="${esc(S.nick)}"><button class="big" id="saveNick">${S.nick?'เปลี่ยนชื่อ':'เข้าร่วมตาราง'}</button>`;
+  h+=`<h3>Top 20 · จัดอันดับตามเลเวล แล้วตามจำนวนไข่รวม</h3>`;
+  if(data===null) h+=`<div style="text-align:center;padding:14px;font-size:13px">กำลังโหลด...</div>`;
+  else if(data===false) h+=`<div style="text-align:center;padding:14px;font-size:13px">โหลดตารางไม่ได้ (ออฟไลน์หรือเซิร์ฟเวอร์ไม่ตอบ) ลองใหม่ภายหลัง · เกมยังเล่นต่อได้ปกติ</div>`;
+  else if(!data.length) h+=`<div style="text-align:center;padding:14px;font-size:13px">ยังไม่มีใครในตาราง เป็นคนแรกเลย!</div>`;
+  else data.forEach((x,i)=>{
+    const me=x.player_id===S.playerId, medal=['🥇','🥈','🥉'][i]||`${i+1}.`;
+    h+=`<div class="cr" style="${me?'background:#fff3d6;border-radius:10px;padding-left:6px':''}"><div class="ic" style="font-size:${i<3?24:15}px;font-weight:800">${medal}</div>
+      <div class="tx"><b>${esc(x.name)}${me?' (คุณ)':''}</b><br>Lv.${x.level} · ${STAGES[stageOf(x.level)].n} · ไข่ ${x.total_eggs}</div></div>`;
+  });
+  const st=$('lsheet').scrollTop; const had=document.activeElement&&document.activeElement.id==='nickIn', v=had?document.activeElement.value:null;
+  $('lsheet').innerHTML=h; $('lsheet').scrollTop=st;
+  if(had){ const n=$('nickIn'); n.value=v; n.focus(); }
+}
+$('lsheet').addEventListener('click', async e=>{
+  if(e.target.id==='xL') return closeLb();
+  if(e.target.id==='saveNick'){
+    const nm=$('nickIn').value.replace(/[\u0000-\u001f<>]/g,'').trim().slice(0,12);
+    if(!nm) return toast('ใส่ชื่อเล่นก่อนนะ');
+    S.nick=nm; save(); e.target.disabled=true;
+    const ok=await submitScore(true);
+    toast(ok?'เข้าตารางอันดับแล้ว!':'ส่งคะแนนไม่สำเร็จ จะลองใหม่อัตโนมัติ');
+    loadLb();
+  }
+});
+if(!S.nick && !S.lbHint) setTimeout(()=>{ S.lbHint=true; save(); toast('แตะ 🏆 ด้านบนเพื่อเข้าตารางอันดับออนไลน์'); }, 25000);
 
 /* ---------- gacha ---------- */
 let lastPulls=[];
