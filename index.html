@@ -70,6 +70,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#8ed1fc;font-family:"S
 #farm[data-sky=solar] #sky{background:linear-gradient(#050a26 0%,#1b2a6b 55%,#a8dd7a 55%,#7cc254 100%)}
 #farm[data-sky=galaxy] #sky{background:linear-gradient(#1a0536 0%,#5b2a8a 55%,#a8dd7a 55%,#7cc254 100%)}
 #farm[data-sky=cosmos] #sky{background:linear-gradient(#000 0%,#2a0a4a 30%,#0a3a5a 55%,#a8dd7a 55%,#7cc254 100%)}
+.ck .hat{line-height:1;white-space:nowrap}
 .ck .acc{position:absolute;left:0;top:0;pointer-events:none;line-height:1;white-space:nowrap}
 
 /* gacha */
@@ -83,6 +84,14 @@ html,body{margin:0;height:100%;overflow:hidden;background:#8ed1fc;font-family:"S
 .fr .ab{font-size:11px;opacity:.75;margin-top:6px}
 .fr .lab{font-size:11px;font-weight:800;margin-top:6px;opacity:.7}
 .bonus{background:#fff3d6;border:2px dashed var(--line);border-radius:12px;padding:6px 10px;font-size:12px;font-weight:700;margin-bottom:8px}
+
+/* dressing room */
+#dstage{position:relative;margin:0 auto 8px;background:linear-gradient(#cfeaff 0%,#cfeaff 58%,#a8dd7a 58%);border-radius:16px;overflow:hidden;touch-action:none}
+#dstage img{position:absolute;pointer-events:none}
+#dstage .da{position:absolute;line-height:1;white-space:nowrap;cursor:grab;touch-action:none;border-radius:10px}
+#dstage .da.sel{outline:2px dashed var(--accent);outline-offset:2px}
+.dctl{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:6px 0}
+.dctl .hb{width:auto;min-width:42px;padding:0 10px;font-size:15px;font-weight:800;color:var(--ink)}
 
 /* actions */
 #actions{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;padding:8px 6px;background:linear-gradient(#7cc254,#5fa83c)}
@@ -170,6 +179,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#8ed1fc;font-family:"S
   <div id="shop" class="ov"><div id="sheet" class="sheet"></div></div>
   <div id="flock" class="ov"><div id="fsheet" class="sheet"></div></div>
   <div id="gacha" class="ov"><div id="gsheet" class="sheet"></div></div>
+  <div id="dress" class="ov"><div id="dsheet" class="sheet"></div></div>
   <div id="modal" class="ov"><div id="msheet" class="sheet"></div></div>
   <div id="toast"></div>
 </div>
@@ -467,11 +477,17 @@ function updateSize(c){
   applyFilter(c);
 }
 /* the artwork faces left; flip it (and the hat) when the chicken walks right */
+/* accessory layout: x,y = offset of the item centre from the chicken anchor, in units of the chicken width; s = font size (same units); r = tilt in degrees.
+   Stored unflipped (chicken facing left); d.pl[slot] holds the player's overrides from the dressing room. */
+const DEF = {hat:{x:-.34,y:-.5,s:.22,r:-14}, face:{x:-.34,y:-.26,s:.2,r:0}, neck:{x:-.33,y:-.1,s:.2,r:0}, back:{x:.42,y:-.28,s:.3,r:0}};
+const layoutOf = (d,sl) => Object.assign({}, DEF[sl], (d.pl&&d.pl[sl])||{});
+function placeAcc(el,l,w,flip){
+  const s=flip?-1:1;
+  el.style.fontSize=l.s*w+'px';
+  el.style.transform=`translate(calc(-50% + ${l.x*s*w}px),calc(-50% + ${l.y*w}px)) rotate(${l.r*s}deg)`;
+}
 function setHat(c){
-  const s=c.flip?-1:1, w=c.w;
-  c.hat.style.transform=`translate(${-w*.62*s}px,${-w*.72}px) rotate(${-14*s}deg)`;
-  const put=(el,x,y,fs)=>{ el.style.fontSize=fs*w+'px'; el.style.transform=`translate(calc(-50% + ${x*s*w}px),calc(-50% + ${y*w}px))`; };
-  put(c.acc.face,-.34,-.26,.2); put(c.acc.neck,-.3,-.1,.2); put(c.acc.back,.42,-.28,.3);
+  ['hat','face','neck','back'].forEach(sl=>placeAcc(sl==='hat'?c.hat:c.acc[sl], layoutOf(c.data,sl), c.w, c.flip));
 }
 function face(c,right){
   if(!!c.flip===right) return;
@@ -933,6 +949,7 @@ function renderFlock(){
     const st = isAdult(d) ? 'โตเต็มวัย' : `ลูกไก่ โตแล้ว ${Math.floor(p*100)}%`;
     h+=`<div class="fr"><div class="top"><div class="th"><img src="${c.img.src}" alt=""><span>${d.hat==='none'?'':d.hat}</span></div>
       <div class="tx"><b>${d.name}</b>สี${C.name} · ${st}</div>
+      <button class="hb" data-dress="${d.id}" title="จัดตำแหน่งเครื่องแต่งกาย">🎨</button>
       <button class="hb" data-edit="${d.id}" title="ชื่อ/สี">✏️</button></div>`;
     Object.entries(SLOTS).forEach(([sl,lab])=>{
       h+=`<div class="lab">${lab}</div><div class="hats">${slotOptions(sl).map(id=>{
@@ -954,10 +971,66 @@ $('fsheet').addEventListener('click', e=>{
     const [id,sl,item]=w.dataset.wear.split(':'), c=chickens.find(k=>k.data.id==id); if(!c) return;
     c.data[sl]=item; updateSize(c); anim(c,'bounce'); beep(800,.08,'triangle',.05); save(); renderFlock(); return;
   }
+  const dr=e.target.closest('[data-dress]');
+  if(dr){ const c=chickens.find(k=>k.data.id==dr.dataset.dress); if(c) openDress(c); return; }
   const ed=e.target.closest('[data-edit]');
   if(ed){ const c=chickens.find(k=>k.data.id==ed.dataset.edit); if(c){ closeFlock(); openModal(c); } }
 });
 setInterval(()=>{ if($('flock').classList.contains('open')) renderFlock(); },3000);
+
+/* ---------- dressing room: drag each worn item to wherever you like ---------- */
+let dressC=null, dressSl='hat';
+function openDress(c){
+  dressC=c; dressSl=['hat','face','neck','back'].find(sl=>c.data[sl]!=='none')||'hat';
+  $('dress').classList.add('open'); renderDress();
+}
+function closeDress(){ $('dress').classList.remove('open'); dressC=null; save(); if($('flock').classList.contains('open')) renderFlock(); }
+$('dress').addEventListener('pointerdown', e=>{ if(e.target===$('dress')) closeDress(); });
+function setPl(sl,patch){
+  const d=dressC.data; d.pl=d.pl||{}; d.pl[sl]=Object.assign(layoutOf(d,sl),patch); setHat(dressC);
+}
+function renderDress(){
+  const c=dressC, d=c.data, W=Math.max(200,Math.min(300,$('dsheet').clientWidth-28)), U=W*.72, ax=W/2, ay=U*.62+W*.08;
+  const worn=['hat','face','neck','back'].filter(sl=>d[sl]!=='none');
+  let h=`<h2>🎨 จัดตำแหน่ง · ${d.name} <button class="x" id="xD">✕</button></h2>`;
+  h+=`<div id="dstage" style="width:${W}px;height:${W*1.05}px">`;
+  const acc=sl=>d[sl]==='none'?'':`<div class="da ${sl===dressSl?'sel':''}" data-sl="${sl}" style="left:${ax}px;top:${ay}px">${d[sl]}</div>`;
+  h+=acc('back')+`<img src="${c.img.src}" alt="" style="left:${ax}px;top:${ay}px;width:${U}px;translate:-50% -62%">`+acc('hat')+acc('face')+acc('neck')+`</div>`;
+  if(!worn.length) h+=`<div style="text-align:center;font-size:13px;margin:8px 0">ยังไม่ได้ใส่อะไร ไปเลือกที่หน้าฝูงไก่ก่อน</div>`;
+  else {
+    h+=`<div class="dctl">${worn.map(sl=>`<button class="hb ${sl===dressSl?'on':''}" data-sel="${sl}" title="${SLOTS[sl]}">${d[sl]}</button>`).join('')}</div>`;
+    h+=`<div class="dctl"><button class="hb" data-ctl="s-">➖ เล็ก</button><button class="hb" data-ctl="s+">➕ ใหญ่</button><button class="hb" data-ctl="r-">↺</button><button class="hb" data-ctl="r+">↻</button><button class="hb" data-ctl="reset">รีเซ็ตชิ้นนี้</button></div>`;
+    h+=`<div style="font-size:12px;opacity:.7;text-align:center">แตะเลือกชิ้น แล้วลากไปวางตรงไหนก็ได้ · ไก่ที่เดินอยู่ในฟาร์มจะใช้ตำแหน่งนี้ด้วย</div>`;
+  }
+  h+=`<button class="big" id="xD2">เสร็จ</button>`;
+  $('dsheet').innerHTML=h;
+  $('dstage').querySelectorAll('.da').forEach(el=>placeAcc(el, layoutOf(d,el.dataset.sl), U, false));
+}
+$('dsheet').addEventListener('pointerdown', e=>{
+  const el=e.target.closest('.da'); if(!el||!dressC) return;
+  e.preventDefault();
+  const sl=el.dataset.sl; if(dressSl!==sl){ dressSl=sl; document.querySelectorAll('#dstage .da').forEach(x=>x.classList.toggle('sel',x===el)); document.querySelectorAll('#dsheet [data-sel]').forEach(x=>x.classList.toggle('on',x.dataset.sel===sl)); }
+  const U=parseFloat($('dstage').querySelector('img').style.width), l0=layoutOf(dressC.data,sl), sx=e.clientX, sy=e.clientY;
+  const mv=ev=>{
+    const x=clamp(l0.x+(ev.clientX-sx)/U,-1,1), y=clamp(l0.y+(ev.clientY-sy)/U,-1,.6);
+    setPl(sl,{x,y}); placeAcc(el, layoutOf(dressC.data,sl), U, false);
+  };
+  const up=()=>{ removeEventListener('pointermove',mv); removeEventListener('pointerup',up); removeEventListener('pointercancel',up); save(); };
+  addEventListener('pointermove',mv); addEventListener('pointerup',up); addEventListener('pointercancel',up);
+});
+$('dsheet').addEventListener('click', e=>{
+  if(e.target.id==='xD'||e.target.id==='xD2') return closeDress();
+  const sel=e.target.closest('[data-sel]');
+  if(sel){ dressSl=sel.dataset.sel; return renderDress(); }
+  const b=e.target.closest('[data-ctl]'); if(!b||!dressC) return;
+  const l=layoutOf(dressC.data,dressSl), k=b.dataset.ctl;
+  if(k==='s-') setPl(dressSl,{s:clamp(l.s*.9,.08,.7)});
+  else if(k==='s+') setPl(dressSl,{s:clamp(l.s*1.1,.08,.7)});
+  else if(k==='r-') setPl(dressSl,{r:l.r-10});
+  else if(k==='r+') setPl(dressSl,{r:l.r+10});
+  else if(k==='reset'){ if(dressC.data.pl) delete dressC.data.pl[dressSl]; setHat(dressC); }
+  save(); renderDress();
+});
 
 /* ---------- gacha ---------- */
 let lastPulls=[];
