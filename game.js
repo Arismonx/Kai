@@ -10,6 +10,7 @@ const clamp = (v,a=0,b=100) => Math.max(a,Math.min(b,v));
 const PICK_SEC = [14,8,4];
 const MAX_FLOCK = 5, GROW_SEC = 300, HATCH_SEC = 90, HATCH_EGGS = 3;
 const defaults = () => ({
+  sound: true,
   coins: 20, grain: 8, eggs: 0, goldEggs: 0,
   hunger: 80, happy: 80, clean: 100,
   xp: 0, level: 1,
@@ -160,6 +161,7 @@ function fx(text, x, y, color){
 function buzz(ms=15){ try{navigator.vibrate&&navigator.vibrate(ms);}catch(e){} }
 let ac=null;
 function beep(freq=600,dur=.08,type='sine',vol=.06){
+  if(!S.sound) return;
   try{
     ac = ac || new (window.AudioContext||window.webkitAudioContext)();
     const o=ac.createOscillator(), g=ac.createGain();
@@ -691,10 +693,6 @@ function renderShop(){
     if(owned) h += row(hat.ic,hat.name,'ของคุณ · ใส่ได้ที่ปุ่ม 🐔 ฝูงไก่','มีแล้ว',true,'');
     else h += row(hat.ic,hat.name,'เปลี่ยนลุคไก่',`${hat.price} 🪙`,S.coins<hat.price,`hat:${hat.id}:${hat.price}`);
   });
-  h += `<h3>ตั้งค่า</h3>`;
-  h += row('📤','สำรองข้อมูล','คัดลอกรหัสเซฟเก็บไว้ ย้ายเครื่องได้','คัดลอก',false,'export');
-  h += row('📥','กู้ข้อมูล','วางรหัสเซฟที่สำรองไว้ (ทับเซฟตอนนี้)','วางรหัส',false,'import');
-  h += row('🔄','เริ่มเกมใหม่','ลบไก่ เหรียญ และความคืบหน้าทั้งหมด','เริ่มใหม่',false,'reset');
   const st=$('sheet').scrollTop;
   $('sheet').innerHTML = h; $('sheet').scrollTop=st;
 }
@@ -709,16 +707,7 @@ $('sheet').addEventListener('click', e=>{
   else if(type==='up'){ const u=UPS[a], cost=u.cost(S.up[a]); if(S.coins>=cost && S.up[a]<u.max){ S.coins-=cost; S.up[a]++; toast('อัปเกรดแล้ว!'); beep(900,.15,'triangle',.07);} }
   else if(type==='hat'){ const p=+c; if(S.coins>=p){ S.coins-=p; S.hats.push(a); toast('ซื้อหมวกแล้ว! ไปใส่ที่ปุ่ม 🐔 ฝูงไก่'); beep(900,.15,'triangle',.07);} }
   else if(type==='incub'){ startIncubate(a==='g'); }
-  else if(type==='export'){ exportSave(); }
   else if(type==='gacha'){ openGacha(); }
-  else if(type==='import'){ if(importSave()) return; }
-  else if(type==='reset'){
-    if(confirm('เริ่มเกมใหม่? ข้อมูลทั้งหมดจะถูกลบและกู้คืนไม่ได้')){
-      resetting=true;
-      try{ localStorage.removeItem(SAVE_KEY); }catch(err){}
-      location.reload(); return;
-    }
-  }
   render(); renderShop(); save();
 });
 /* save backup: S as base64 text with a "KAI1:" prefix so it can be pasted back later */
@@ -918,6 +907,36 @@ $('lsheet').addEventListener('click', async e=>{
   }
 });
 if(!S.nick && !S.lbHint) setTimeout(()=>{ S.lbHint=true; save(); toast('แตะ 🏆 ด้านบนเพื่อเข้าตารางอันดับออนไลน์'); }, 25000);
+
+/* ---------- settings (sound / backup / restore / reset) ---------- */
+function openSettings(){ $('setx').classList.add('open'); renderSettings(); }
+function closeSettings(){ $('setx').classList.remove('open'); }
+$('setx').addEventListener('pointerdown', e=>{ if(e.target===$('setx')) closeSettings(); });
+function renderSettings(){
+  let h = `<h2>⚙️ ตั้งค่า<button class="x" id="xSet">✕</button></h2>`;
+  h += row(S.sound?'🔊':'🔇','เสียงเกม',S.sound?'เปิดอยู่':'ปิดอยู่',S.sound?'ปิดเสียง':'เปิดเสียง',false,'sound');
+  h += row('📤','สำรองข้อมูล','คัดลอกรหัสเซฟเก็บไว้ ย้ายเครื่องได้','คัดลอก',false,'export');
+  h += row('📥','กู้ข้อมูล','วางรหัสเซฟที่สำรองไว้ (ทับเซฟตอนนี้)','วางรหัส',false,'import');
+  h += row('🔄','เริ่มเกมใหม่','ลบไก่ เหรียญ และความคืบหน้าทั้งหมด','เริ่มใหม่',false,'reset','danger');
+  $('ssheet').innerHTML = h;
+}
+$('ssheet').addEventListener('click', e=>{
+  if(e.target.id==='xSet') return closeSettings();
+  const b=e.target.closest('button[data-act]'); if(!b||b.disabled) return;
+  const type=b.dataset.act;
+  if(type==='sound'){ S.sound=!S.sound; if(S.sound) beep(800,.08,'triangle',.06); }
+  else if(type==='export'){ exportSave(); }
+  else if(type==='import'){ if(importSave()) return; }
+  else if(type==='reset'){
+    if(confirm('เริ่มเกมใหม่? ข้อมูลทั้งหมดจะถูกลบและกู้คืนไม่ได้')){
+      resetting=true;
+      try{ localStorage.removeItem(SAVE_KEY); }catch(err){}
+      location.reload(); return;
+    }
+  }
+  renderSettings(); save();
+});
+$('bSet').onclick = openSettings;
 
 /* ---------- gacha ---------- */
 let lastPulls=[];

@@ -24,8 +24,8 @@ html[data-sky=cosmos],html[data-sky=cosmos] body,html[data-sky=cosmos] #app{back
 .stat .bar i{display:block;height:100%;width:100%;transition:width .3s,background .3s}
 
 #subbar{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 10px 6px;z-index:5}
-#bLb{background:var(--card);border:2px solid var(--line);border-bottom-width:4px;border-radius:12px;padding:7px 4px;font:inherit;font-size:16px;font-weight:800;color:var(--ink)}
-#bLb:active{transform:translateY(2px);border-bottom-width:2px}
+#bLb,#bSet{background:var(--card);border:2px solid var(--line);border-bottom-width:4px;border-radius:12px;padding:7px 4px;font:inherit;font-size:16px;font-weight:800;color:var(--ink)}
+#bLb:active,#bSet:active{transform:translateY(2px);border-bottom-width:2px}
 
 /* farm */
 #farm{position:relative;flex:1;min-height:0;overflow:hidden;isolation:isolate}
@@ -131,6 +131,7 @@ html[data-sky=cosmos],html[data-sky=cosmos] body,html[data-sky=cosmos] #app{back
 .row .tx b{font-size:15px;display:block}
 .row button{background:var(--accent);color:#fff;border:0;border-bottom:4px solid #c9622a;border-radius:12px;padding:8px 12px;font-weight:800;font-size:14px;font-family:inherit;white-space:nowrap}
 .row button[disabled]{background:#c9b8a0;border-bottom-color:#a89677}
+.row button.danger{background:#c0392b;border-bottom-color:#8e2a20}
 .row button.on{background:var(--good);border-bottom-color:#3f8d3f}
 
 #toast{position:absolute;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:8px 16px;border-radius:999px;font-weight:700;font-size:14px;opacity:0;transition:opacity .25s;z-index:30;pointer-events:none;white-space:nowrap}
