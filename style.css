@@ -3,6 +3,10 @@
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:manipulation}
 html,body{margin:0;height:100%;overflow:hidden;background:#8ed1fc;font-family:"Sarabun","Noto Sans Thai",system-ui,sans-serif;color:var(--ink)}
+html[data-sky=earth],html[data-sky=earth] body,html[data-sky=earth] #app{background:#0b2a6b}
+html[data-sky=solar],html[data-sky=solar] body,html[data-sky=solar] #app{background:#050a26}
+html[data-sky=galaxy],html[data-sky=galaxy] body,html[data-sky=galaxy] #app{background:#1a0536}
+html[data-sky=cosmos],html[data-sky=cosmos] body,html[data-sky=cosmos] #app{background:#000}
 #app{position:fixed;inset:0;display:flex;flex-direction:column;max-width:520px;margin:0 auto;background:#8ed1fc}
 
 /* top bar */

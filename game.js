@@ -327,7 +327,7 @@ function render(){
   $('eggs').textContent = S.eggs + (S.goldEggs? ' +'+S.goldEggs+'✨':'');
   const stg=STAGES[stageOf(S.level)];
   $('lvlname').textContent = `Lv.${S.level} ${stg.n}`;
-  if(stg.sky) farm.dataset.sky=stg.sky; else delete farm.dataset.sky;
+  if(stg.sky){ farm.dataset.sky=stg.sky; document.documentElement.dataset.sky=stg.sky; } else { delete farm.dataset.sky; delete document.documentElement.dataset.sky; }
   $('cosmos').textContent = stg.ic||'';
   $('xpbar').style.width = (S.xp/xpNeed(S.level)*100)+'%';
   setBar('sHunger',S.hunger); setBar('sHappy',S.happy); setBar('sClean',S.clean);
